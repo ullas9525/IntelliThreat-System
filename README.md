@@ -58,32 +58,6 @@ This system is especially useful for small and medium enterprises that do not ha
 
 ---
 
-## ▶️ Usage
-
-### Step 1: Prepare Dataset
-
-Place your CSV dataset inside the `data/` folder.
-
-### Step 2: Train the Model
-
-```bash
-python src/train_model.py
-```
-
-### Step 3: Run Backend Server
-
-```bash
-python backend/api.py
-```
-
-### Step 4: Launch Dashboard
-
-```bash
-python frontend/dashboard.py
-```
-
----
-
 ## 📊 Output
 
 The system generates:
