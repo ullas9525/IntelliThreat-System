@@ -18,21 +18,21 @@ NUM_USERS = 5000
 # ==========================================
 # 1. INITIALIZE LISTS
 # ==========================================
-user_ids = []
-roles = []
-login_hours = []
-session_durations = []
-data_download_mbs = []
-transaction_amounts = []
-access_counts = []
-privilege_levels = []
-device_changes = []
-location_changes = []
-failed_logins_list = []
-is_off_hours_list = []
-login_frequencies = []
-attack_types = [] # New Column
-risk_scores = []
+user_ids = [] # Description: Unique identifier for each user.
+roles = [] # Description: Job role (Admin, Employee, Vendor, etc.).
+login_hours = [] # Unit: Hour (0-23) | Description: The hour of the day the session started (e.g., 14 = 2 PM).
+session_durations = [] # Unit: Minutes | Description: Total time spent in the session.
+data_download_mbs = [] # Unit: MB | Description: Total data downloaded during the session.
+transaction_amounts = [] # Unit: USD | Description: Total value of transactions performed.
+access_counts = [] # Unit: Count | Description: Number of resources/files accessed.
+privilege_levels = [] # Unit: Level (1-5) | Description: Security clearance level used in session.
+device_changes = [] # Unit: Binary (0/1) | Description: 1 if the device used is different from usual.
+location_changes = [] # Unit: Binary (0/1) | Description: 1 if the location (IP/Geo) is different from usual.
+failed_logins_list = [] # Unit: Count | Description: Number of failed password attempts before success.
+is_off_hours_list = [] # Unit: Binary (0/1) | Description: 1 if login is outside standard working hours (8 PM - 7 AM).
+login_frequencies = [] # Unit: Count/Day | Description: How many times the user logged in today.
+attack_types = [] # Description: Label for the scenario (Normal, Brute Force, Exfiltration, etc.).
+risk_scores = [] # Unit: Probability (0-1) | Description: Calculated likelihood of this session being a threat.
 
 # ==========================================
 # 2. CREATE CONSISTENT USER POOL
