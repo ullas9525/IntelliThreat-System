@@ -4,6 +4,7 @@ import numpy as np   # Numerical operations
 import os            # File paths
 import random        # Random generation
 from faker import Faker  # Realistic fake data
+from datetime import datetime, timedelta # Time handling
 
 # Initialize Faker
 faker = Faker()
@@ -14,12 +15,15 @@ faker = Faker()
 NUM_ROWS = 100000
 OUTPUT_FILE = "RawDataset.csv"
 NUM_USERS = 5000
+START_DATE = datetime(2025, 1, 1) # Simulation start date
+DAYS_RANGE = 90 # Generates data for 3 months
 
 # ==========================================
 # 1. INITIALIZE LISTS
 # ==========================================
 user_ids = [] # Description: Unique identifier for each user.
 roles = [] # Description: Job role (Admin, Employee, Vendor, etc.).
+timestamps = [] # Unit: Datetime | Description: Exact date and time of the login event.
 login_hours = [] # Unit: Hour (0-23) | Description: The hour of the day the session started (e.g., 14 = 2 PM).
 session_durations = [] # Unit: Minutes | Description: Total time spent in the session.
 data_download_mbs = [] # Unit: MB | Description: Total data downloaded during the session.
@@ -42,13 +46,14 @@ pool_user_ids = []
 pool_roles = []
 
 role_types = ['Employee', 'Manager', 'Vendor', 'Contractor', 'Admin']
+# Risk multipliers for roles
 role_weights = [0.6, 0.1, 0.15, 0.1, 0.05] 
 
 for _ in range(NUM_USERS):
     pool_user_ids.append(faker.uuid4()[:8])
     pool_roles.append(np.random.choice(role_types, p=role_weights))
 
-print(f"Generating {NUM_ROWS} rows with enhanced patterns and attack labels...")
+print(f"Generating {NUM_ROWS} rows with enhanced patterns, timestamps, and attack labels...")
 
 # ==========================================
 # 3. GENERATE DATA (LINEAR LOOP)
@@ -77,10 +82,7 @@ for i in range(NUM_ROWS):
     download = int(np.random.exponential(10)) 
     amount = int(np.random.exponential(500)) 
     access = int(np.random.poisson(5))
-    
-    # Expanded privilege range for everyone (1-5), but weighted lower for normal users
     privilege = np.random.choice([1, 2, 3, 4, 5], p=[0.5, 0.3, 0.1, 0.05, 0.05])
-    
     dev_change = 0 
     loc_change = 0
     fails = 0
@@ -92,45 +94,55 @@ for i in range(NUM_ROWS):
     if scenario == 1: # Data Exfiltration
         attack_label = 'Data Exfiltration'
         l_hour = np.random.choice([22, 23, 0, 1, 2, 3, 4]) # Off hours
-        download = int(np.random.normal(2500, 800)) # Massive download
-        duration = np.random.choice([10, 400]) # Quick or very long
-        # Often involves location change (VPN)
+        download = int(np.random.normal(2500, 800)) 
+        duration = np.random.choice([10, 400]) 
         loc_change = np.random.choice([0, 1], p=[0.3, 0.7]) 
         
     elif scenario == 2: # Brute Force / Automation
         attack_label = 'Brute Force'
-        fails = np.random.randint(5, 20) # High failures
-        dev_change = 1 # New device
-        loc_change = 1 # New location (Attacker is remote)
+        fails = np.random.randint(5, 20) 
+        dev_change = 1 
+        loc_change = 1 
         l_hour = np.random.choice([1, 2, 3, 4])
-        access = int(np.random.poisson(50)) # High velocity scanning
-        duration = np.random.randint(1, 5) # Short sessions
+        access = int(np.random.poisson(50)) 
+        duration = np.random.randint(1, 5) 
         
     elif scenario == 3: # Privilege Abuse
         attack_label = 'Privilege Abuse'
-        # Trying to access higher privilege or abusing existing high privilege
         if role in ['Admin', 'Manager']:
             privilege = 5
-            amount = int(np.random.normal(60000, 15000)) # Large transfer
-            download = int(np.random.normal(500, 100)) # Moderate download (sensitive files)
+            amount = int(np.random.normal(60000, 15000)) 
+            download = int(np.random.normal(500, 100)) 
         else:
-            privilege = np.random.choice([4, 5]) # Employee accessing Level 5
-            fails = np.random.randint(2, 5) # Some auth errors
-            access = np.random.randint(20, 40) # Hunting for access
+            privilege = np.random.choice([4, 5]) 
+            fails = np.random.randint(2, 5) 
+            access = np.random.randint(20, 40) 
             
     elif scenario == 4: # Anomalous Travel / Account Sharing
         attack_label = 'Account Sharing'
         loc_change = 1
         dev_change = 1
-        l_hour = np.random.choice(range(8, 20)) # Normal time
-        access = int(np.random.poisson(10)) # Slightly higher usage
+        l_hour = np.random.choice(range(8, 20)) 
+        access = int(np.random.poisson(10)) 
             
     # Cleanup bounds
     duration = max(1, duration)
     download = max(0, download)
     amount = max(0, amount)
 
+    # --- D. Generate Timestamp ---
+    # Random day in range
+    random_days = random.randint(0, DAYS_RANGE)
+    # Random minute and second
+    random_minute = random.randint(0, 59)
+    random_second = random.randint(0, 59)
+    # Construct Datetime
+    dt = START_DATE + timedelta(days=random_days)
+    dt = dt.replace(hour=l_hour, minute=random_minute, second=random_second)
+    timestamp_str = dt.strftime("%Y-%m-%d %H:%M:%S")
+    
     # Store Feature Values
+    timestamps.append(timestamp_str)
     login_hours.append(l_hour)
     session_durations.append(duration)
     data_download_mbs.append(download)
@@ -159,30 +171,18 @@ for i in range(NUM_ROWS):
     
     # Feature Impact
     if is_off_hours: risk += 0.15
-    
-    # Data Exfiltration Signals
     if download > 1000: risk += 0.40 
     elif download > 250: risk += 0.15
-    
-    # Financial Fraud Signals
     if amount > 20000: risk += 0.35 
     elif amount > 5000: risk += 0.10
-    
-    # Brute Force Signals
     if fails > 5: risk += 0.30
     elif fails > 2: risk += 0.10
-    
-    # Contextual Anomalies (Location/Device)
     if loc_change and dev_change: risk += 0.20
     elif loc_change: risk += 0.10
-    
-    # Privilege Anomalies
-    if privilege >= 4 and role not in ['Admin', 'Manager']: risk += 0.25 # Unauthorized high priv
-    if privilege == 5: risk += 0.10 # High priv usage includes some risk inherently
-    
-    # Session Anomalies
-    if duration < 3 and access > 10: risk += 0.15 # Automation
-    if access > 40: risk += 0.10 # High velocity
+    if privilege >= 4 and role not in ['Admin', 'Manager']: risk += 0.25 
+    if privilege == 5: risk += 0.10 
+    if duration < 3 and access > 10: risk += 0.15 
+    if access > 40: risk += 0.10 
     
     # Normalize
     noise = np.random.uniform(-0.03, 0.03)
@@ -196,6 +196,7 @@ for i in range(NUM_ROWS):
 # 5. SAVE DATASET
 # ==========================================
 data = {
+    "timestamp": timestamps, # New Column
     "user_id": user_ids,
     "role": roles,
     "login_hour": login_hours,
@@ -209,14 +210,18 @@ data = {
     "failed_logins": failed_logins_list,
     "is_off_hours": is_off_hours_list,
     "login_frequency": login_frequencies,
-    "attack_type": attack_types, # Added to output
+    "attack_type": attack_types,
     "risk_score": risk_scores
 }
 
 df = pd.DataFrame(data)
 
+# Sort by timestamp for realism
+df['timestamp'] = pd.to_datetime(df['timestamp'])
+df = df.sort_values(by='timestamp')
+
 print(f"Saving to {OUTPUT_FILE}...")
 df.to_csv(OUTPUT_FILE, index=False)
 print("Done!")
-print("\nStats by Attack Type:")
-print(df.groupby('attack_type')['risk_score'].mean())
+print("\nSample Data:")
+print(df[['timestamp', 'user_id', 'role', 'login_hour', 'attack_type', 'risk_score']].head())
