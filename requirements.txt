@@ -1,0 +1,30 @@
+# Core Backend
+Flask
+Flask-SQLAlchemy
+Flask-Cors
+
+# Database Driver
+PyMySQL
+
+# Machine Learning & Data Processing
+scikit-learn
+pandas
+numpy
+joblib
+
+# Visualization
+matplotlib
+seaborn
+
+# Explainable AI (XAI)
+shap
+
+# Utilities & Configuration
+python-dotenv
+requests
+
+# Testing
+pytest
+
+# Data Generation
+Faker
