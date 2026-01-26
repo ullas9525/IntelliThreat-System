@@ -16,10 +16,12 @@ venv/
 .vscode/
 .idea/
 
-# Data Files (Generated)
-*.csv
-*.xlsx
-*.json
+
+# Data Files (Generated) - User opted to keep these in repo
+# *.csv
+# *.xlsx
+# *.json
+
 
 # Machine Learning Artifacts (Can be regenerated via pipeline)
 *.pkl
