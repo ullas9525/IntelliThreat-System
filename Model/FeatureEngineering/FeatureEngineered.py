@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import os
+import joblib
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 
 # ==========================================
@@ -64,6 +65,8 @@ print("Encoding Categorical Variables...")
 le_role = LabelEncoder()
 df['role_encoded'] = le_role.fit_transform(df['role'].astype(str))
 print(f"  - Roles Encoded: {dict(zip(le_role.classes_, le_role.transform(le_role.classes_)))}")
+joblib.dump(le_role, os.path.join(script_dir, "role_encoder.pkl"))
+print("  - Saved role_encoder.pkl")
 
 # Target Generation
 # 'is_attack' = 1 if attack_type is NOT 'Normal'
@@ -105,6 +108,8 @@ existing_scale_cols = [c for c in scale_cols if c in df_ml.columns]
 
 if existing_scale_cols:
     df_ml[existing_scale_cols] = scaler.fit_transform(df_ml[existing_scale_cols])
+    joblib.dump(scaler, os.path.join(script_dir, "scaler.pkl"))
+    print("  - Saved scaler.pkl")
 
 # ==========================================
 # 7. SAVE OUTPUT

@@ -1,0 +1,35 @@
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# IDEs
+.vscode/
+.idea/
+
+# Data Files (Generated)
+*.csv
+*.xlsx
+*.json
+
+# Machine Learning Artifacts (Can be regenerated via pipeline)
+*.pkl
+*.joblib
+Model/ModelTraining/anomaly_score_distribution.png
+
+# Logs
+logs/
+*.log
+
+# Backend
+backend/instance/
+backend/__pycache__/
