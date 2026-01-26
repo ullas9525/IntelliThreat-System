@@ -16,6 +16,7 @@ def predict():
     try:
         user_id = get_jwt_identity()
         data = request.get_json()
+        data['user_id'] = user_id # Inject user_id for validation
         
         # Validate Input
         is_valid, msg = validate_log_input(data)

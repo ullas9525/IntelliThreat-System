@@ -69,13 +69,21 @@ const ThreatSimulator = () => {
     setSimulationResult(null);
 
     try {
+      console.log("SIMULATOR: Sending data...", scenario.data);
       // Simulate network delay for effect
       await new Promise(r => setTimeout(r, 800));
 
       const response = await api.post('/predict', scenario.data);
+      console.log("SIMULATOR: Response received:", response.data);
       setSimulationResult(response.data);
     } catch (error) {
-      console.error("Simulation failed", error);
+      console.error("SIMULATOR: Simulation failed", error);
+      if (error.response) {
+        console.error("SIMULATOR: Server Error:", error.response.status, error.response.data);
+        alert(`Simulation Failed: ${error.response.data.msg || 'Server Error'}`);
+      } else {
+        alert("Network Error: Could not reach server.");
+      }
     } finally {
       setLoading(false);
     }
@@ -100,8 +108,8 @@ const ThreatSimulator = () => {
                 onClick={() => handleSimulate(scenario)}
                 disabled={loading}
                 className={`w-full text-left p-4 rounded-xl border transition-all ${selectedScenario === scenario.id
-                    ? 'bg-accent-primary/10 border-accent-primary'
-                    : 'bg-dark-card border-gray-800 hover:border-gray-600'
+                  ? 'bg-accent-primary/10 border-accent-primary'
+                  : 'bg-dark-card border-gray-800 hover:border-gray-600'
                   }`}
               >
                 <div className="flex items-start space-x-4">
