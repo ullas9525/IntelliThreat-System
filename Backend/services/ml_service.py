@@ -65,6 +65,16 @@ class MLService:
                  logger.warning(f"Unknown role {df['role'][0]}, defaulting to 0")
                  df['role_encoded'] = 0
 
+            # 4.5 Add Missing Features expected by Model
+            # privilege_level (1-5), device_change (0/1), location_change (0/1), is_off_hours (0/1)
+            if 'privilege_level' not in df.columns: df['privilege_level'] = 1
+            if 'device_change' not in df.columns: df['device_change'] = 0
+            if 'location_change' not in df.columns: df['location_change'] = 0
+            
+            # Recalculate is_off_hours based on timestamp/hour (8PM - 7AM = Off hours)
+            # Matching RawData.py: l_hour < 7 or l_hour > 20
+            df['is_off_hours'] = df['hour_of_day'].apply(lambda h: 1 if (h < 7 or h > 20) else 0)
+
             # 5. Select & Order Features (MUST MATCH TRAINING)
             # Features: session_duration, data_download_mb, transaction_amount, access_count, 
             #           login_frequency, login_hour, failed_logins, hour_of_day, day_of_week, 
@@ -79,7 +89,8 @@ class MLService:
                 'session_duration', 'data_download_mb', 'transaction_amount', 
                 'access_count', 'data_intensity', 'access_rate', 
                 'login_frequency', 'login_hour', 'failed_logins', 
-                'hour_of_day', 'day_of_week', 'is_weekend', 'role_encoded'
+                'hour_of_day', 'day_of_week', 'is_weekend', 'role_encoded',
+                'privilege_level', 'device_change', 'location_change', 'is_off_hours'
             ]
             
             # Ensure all cols exist
