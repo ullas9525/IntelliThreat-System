@@ -15,14 +15,20 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("LOGIN PAGE: Submit clicked");
+    alert("Login pressed! Check console.");
     setError('');
     setLoading(true);
 
     const result = await login(username, password);
+    console.log("LOGIN PAGE: Result:", result);
 
     if (result.success) {
-      navigate('/');
+      console.log("LOGIN PAGE: Success! Forcing reload to /");
+      // Force reload to ensure AuthContext picks up the new token
+      window.location.href = '/';
     } else {
+      console.error("LOGIN PAGE: Failed:", result.message);
       setError(result.message);
     }
     setLoading(false);

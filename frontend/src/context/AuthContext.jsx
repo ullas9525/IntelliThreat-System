@@ -13,8 +13,21 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
 
-    if (token && storedUser) {
-      setUser(JSON.parse(storedUser));
+    console.log("AUTH INIT: Token from storage:", token);
+    console.log("AUTH INIT: User from storage:", storedUser);
+
+    if (token && storedUser && storedUser !== "undefined") {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        console.log("AUTH INIT: Parsed user:", parsedUser);
+        setUser(parsedUser);
+      } catch (e) {
+        console.error("AUTH INIT: Failed to parse user JSON", e);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
+    } else {
+      console.log("AUTH INIT: No valid session found.");
     }
     setLoading(false);
   }, []);
@@ -22,10 +35,12 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const response = await api.post('/auth/login', { username, password });
+      console.log("AUTH CONTEXT: API Response:", response.data);
       const { access_token, user } = response.data;
 
       localStorage.setItem('token', access_token);
       localStorage.setItem('user', JSON.stringify(user));
+      console.log("AUTH CONTEXT: Setting user state:", user);
       setUser(user);
       return { success: true };
     } catch (error) {

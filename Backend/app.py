@@ -16,7 +16,7 @@ def create_app():
     app.config.from_object(Config)
     
     # Extensions
-    CORS(app)
+    CORS(app, resources={r"/api/*": {"origins": ["http://localhost:5173", "http://localhost:5174"]}}, supports_credentials=True)
     db.init_app(app)
     JWTManager(app)
     bcrypt.init_app(app)

@@ -11,13 +11,15 @@ import AuthLayout from './layouts/AuthLayout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ThreatSimulator from './pages/ThreatSimulator';
-import ThreatSimulator from './pages/ThreatSimulator';
+
 import UserActivity from './pages/UserActivity';
 import Settings from './pages/Settings';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
+
+  console.log("PROTECTED ROUTE: Checking access. User:", user, "Loading:", loading);
 
   if (loading) {
     return (
@@ -28,6 +30,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!user) {
+    console.warn("PROTECTED ROUTE: No user found. Redirecting to login.");
     return <Navigate to="/login" replace />;
   }
 
