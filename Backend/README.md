@@ -77,3 +77,13 @@ Flask-based backend for Unsupervised Insider Threat Detection.
 ### 4. Get History
 **GET** `/api/logs`
 **Headers**: `Authorization: Bearer <access_token>`
+
+## Verification
+I have included an automated test script to verify the entire pipeline.
+1.  Ensure the server is running (`python app.py`).
+2.  Run the test script:
+    ```bash
+    python test_backend.py
+    ```
+    This will simulate a new user registration, login, submit normal & attack scenarios, and fetch logs.
+

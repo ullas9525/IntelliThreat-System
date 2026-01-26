@@ -2,11 +2,14 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from .config import Config
-from .database import db
-from .routes.auth import auth_bp, bcrypt
-from .routes.predict import predict_bp
-from .utils.logger import get_logger
+from flask import Flask
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager
+from config import Config
+from database import db
+from routes.auth import auth_bp, bcrypt
+from routes.predict import predict_bp
+from utils.logger import get_logger
 
 def create_app():
     app = Flask(__name__)

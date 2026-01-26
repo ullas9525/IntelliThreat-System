@@ -1,10 +1,10 @@
 
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models import ActivityLog, Prediction, User, db
-from ..services.ml_service import MLService
-from ..utils.validators import validate_log_input
-from ..utils.logger import get_logger
+from models import ActivityLog, Prediction, User, db
+from services.ml_service import MLService
+from utils.validators import validate_log_input
+from utils.logger import get_logger
 
 predict_bp = Blueprint('predict', __name__)
 logger = get_logger()

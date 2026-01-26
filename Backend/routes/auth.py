@@ -1,7 +1,7 @@
 
 from flask import Blueprint, request, jsonify
-from ..models import User, db
-from ..utils.validators import validate_register_input
+from models import User, db
+from utils.validators import validate_register_input
 from flask_jwt_extended import create_access_token
 from flask_bcrypt import Bcrypt
 
@@ -35,7 +35,7 @@ def login():
     user = User.query.filter_by(username=username).first()
     
     if user and bcrypt.check_password_hash(user.password_hash, password):
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
         return jsonify(access_token=access_token, user=user.to_dict()), 200
     
     return jsonify({"msg": "Bad username or password"}), 401

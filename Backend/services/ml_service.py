@@ -3,8 +3,9 @@ import os
 import joblib
 import pandas as pd
 import numpy as np
-from ..config import Config
-from ..utils.logger import get_logger
+from config import Config
+from utils.logger import get_logger
+from model_definitions import UnsupervisedEnsemble
 
 logger = get_logger()
 
