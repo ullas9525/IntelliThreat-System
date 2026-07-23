@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import api from '../services/api';
-import { Shield, AlertTriangle, CheckCircle, Zap, Server, Activity } from 'lucide-react';
+import { Shield, ShieldAlert, AlertTriangle, CheckCircle, Zap, Server, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ThreatSimulator = () => {
@@ -23,6 +23,7 @@ const ThreatSimulator = () => {
         access_count: 12,
         login_frequency: 1,
         failed_logins: 0,
+        login_hour: 14,
         role: 'Analyst',
         action_type: 'Report Generation'
       }
@@ -40,6 +41,8 @@ const ThreatSimulator = () => {
         access_count: 200,
         login_frequency: 3,
         failed_logins: 1,
+        login_hour: 2,
+        timestamp: new Date().toISOString().split('T')[0] + 'T02:30:00',
         role: 'Analyst',
         action_type: 'Bulk Export'
       }
@@ -57,7 +60,9 @@ const ThreatSimulator = () => {
         access_count: 5,
         login_frequency: 20,
         failed_logins: 15,
-        role: 'Unknown',
+        login_hour: 3,
+        timestamp: new Date().toISOString().split('T')[0] + 'T03:15:00',
+        role: 'Employee',
         action_type: 'Login Retry'
       }
     }

@@ -55,69 +55,57 @@ class MLService:
             df['access_rate'] = df['access_count'] / duration
             
             # 4. Encoding
-            # Handle unknown roles by defaulting to something safe or erroring
-            # Here we map to known classes, default to first class if unknown (or handle robustly)
-            # For simplicity using transform, assuming role is valid.
-            try:
-                df['role_encoded'] = self.role_encoder.transform(df['role'].astype(str))
-            except ValueError:
-                 # Fallback for unknown role
-                 logger.warning(f"Unknown role {df['role'][0]}, defaulting to 0")
-                 df['role_encoded'] = 0
+            role_str = str(df['role'].iloc[0]).strip() if 'role' in df.columns else 'Employee'
+            if hasattr(self.role_encoder, 'classes_') and role_str in self.role_encoder.classes_:
+                df['role_encoded'] = self.role_encoder.transform([role_str])[0]
+            else:
+                role_map = {'Analyst': 'Employee', 'Senior Analyst': 'Employee', 'IT Admin': 'Admin', 'HR': 'Employee'}
+                mapped_role = role_map.get(role_str, 'Employee')
+                if hasattr(self.role_encoder, 'classes_') and mapped_role in self.role_encoder.classes_:
+                    df['role_encoded'] = self.role_encoder.transform([mapped_role])[0]
+                else:
+                    df['role_encoded'] = 0
 
             # 4.5 Add Missing Features expected by Model
-            # privilege_level (1-5), device_change (0/1), location_change (0/1), is_off_hours (0/1)
             if 'privilege_level' not in df.columns: df['privilege_level'] = 1
             if 'device_change' not in df.columns: df['device_change'] = 0
             if 'location_change' not in df.columns: df['location_change'] = 0
             
             # Recalculate is_off_hours based on timestamp/hour (8PM - 7AM = Off hours)
-            # Matching RawData.py: l_hour < 7 or l_hour > 20
             df['is_off_hours'] = df['hour_of_day'].apply(lambda h: 1 if (h < 7 or h > 20) else 0)
 
-            # 5. Select & Order Features (MUST MATCH TRAINING)
-            # Features: session_duration, data_download_mb, transaction_amount, access_count, 
-            #           login_frequency, login_hour, failed_logins, hour_of_day, day_of_week, 
-            #           is_weekend, data_intensity, access_rate, role_encoded
-            
-            # NOTE: FeatureEngineer.py derived `hour_of_day`, but also had `login_hour` from raw data.
-            # We must ensure `login_hour` exists. If not input, assume it's `hour_of_day`.
             if 'login_hour' not in df.columns:
-                 df['login_hour'] = df['hour_of_day']
+                df['login_hour'] = df['hour_of_day']
 
-            final_cols = [
-                'session_duration', 'data_download_mb', 'transaction_amount', 
-                'access_count', 'data_intensity', 'access_rate', 
-                'login_frequency', 'login_hour', 'failed_logins', 
-                'hour_of_day', 'day_of_week', 'is_weekend', 'role_encoded',
-                'privilege_level', 'device_change', 'location_change', 'is_off_hours'
-            ]
-            
-            # Ensure all cols exist
-            for col in final_cols:
-                if col not in df.columns:
-                    df[col] = 0 # Default filling
-            
-            df_final = df[final_cols]
-            
-            # 6. Scaling
-            # Columns to scale: session_duration, data_download_mb, transaction_amount, 
-            # access_count, data_intensity, access_rate, login_frequency, login_hour, failed_logins
-            scale_cols = [
+            # 5. Scaling
+            scale_cols = getattr(self.scaler, 'feature_names_in_', [
                 'session_duration', 'data_download_mb', 'transaction_amount', 
                 'access_count', 'data_intensity', 'access_rate', 
                 'login_frequency', 'login_hour', 'failed_logins'
-            ]
+            ])
             
-            df_final[scale_cols] = self.scaler.transform(df_final[scale_cols])
+            for col in scale_cols:
+                if col not in df.columns:
+                    df[col] = 0.0
+
+            df[list(scale_cols)] = self.scaler.transform(df[list(scale_cols)])
+
+            # 6. Select & Order Features (MUST MATCH MODEL TRAINING FIT ORDER EXACTLY)
+            if hasattr(self.model, 'models') and len(self.model.models) > 0 and hasattr(self.model.models[0], 'feature_names_in_'):
+                final_cols = list(self.model.models[0].feature_names_in_)
+            else:
+                final_cols = [
+                    'login_hour', 'session_duration', 'data_download_mb', 'transaction_amount', 
+                    'access_count', 'privilege_level', 'device_change', 'location_change', 
+                    'failed_logins', 'is_off_hours', 'login_frequency', 'hour_of_day', 
+                    'day_of_week', 'is_weekend', 'data_intensity', 'access_rate', 'role_encoded'
+                ]
             
-            # The model expects specific column order defined by `final_cols`.
-            # IsolationForest doesn't care about names, just order.
-            # However, `TrainModel.py` dropped EXCLUDE_COLS.
-            # The remaining columns in `TrainModel.py` were everything in `FeatureEngineeredDataset.csv`
-            # MINUS `['is_attack', 'attack_class', 'attack_type', 'risk_score', 'user_id', 'timestamp']`
-            # Let's verify the order based on expected `FeatureEngineeredDataset.csv`
+            for col in final_cols:
+                if col not in df.columns:
+                    df[col] = 0
             
+            df_final = df[final_cols]
             return df_final
             
         except Exception as e:
@@ -129,32 +117,19 @@ class MLService:
             X_input = self.preprocess(data)
             
             # 1. Anomaly Score (Lower is more anomalous)
+            # 1. Anomaly Score (Lower/negative is anomalous in Isolation Forest)
             raw_scores = self.model.decision_function(X_input)
-            
-            # 2. Convert to Risk Score (0 to 1)
-            # We need the logic from TrainModel.py: risk_scores = scaler.fit_transform(inverted_scores)
-            # Since we can't fit on single prediction, we use a heuristic or parameters if we saved them.
-            # TrainModel used MinMax on the BATCH.
-            # For inference, we can clip/approximate. 
-            # Inverted score range roughly: -0.2 (normal) to 0.8 (anomaly)? 
-            # IF output is roughly -0.5 to 0.5.
-            # Simpler: Use probability or manually normalize based on observed range in training.
-            # Let's assume a simplified normalization based on standard IF score bounds.
-            # decision_function offset: 0. Positive -> Normal, Negative -> Abnormal.
-            # We want High Risk (1) for Negative, Low Risk (0) for Positive.
-            
-            # Heuristic normalization:
-            # Score s. Max theoretical ~0.5 (very normal), Min ~ -0.5 (anomaly)
-            # Risk = (0.5 - s)  -> if s=0.5 risk=0. if s=-0.5 risk=1.
             score = raw_scores[0]
-            risk_score = 0.5 - score
-            risk_score = max(0.0, min(1.0, risk_score)) # Clip 0-1
+            
+            # 2. Convert to Risk Score (0.0 to 1.0)
+            # Isolation Forest decision_function ranges from ~ -0.35 (severe anomaly) to +0.25 (normal).
+            # Score = 0.0 is the exact anomaly decision boundary (50% risk).
+            risk_score = 0.5 - (score / 0.40)
+            risk_score = max(0.0, min(1.0, risk_score)) # Clip to 0-1
             
             # 3. Alert Status
-            # We used dynamic threshold (85th percentile) in Training.
-            # We should probably hardcode a "safe" threshold or load the saved one.
-            # For this MVP, let's pick 0.75 as high risk.
-            is_anomaly = bool(risk_score > 0.75)
+            # In Isolation Forest standard, any score < 0 (or risk_score > 0.50) is an anomaly
+            is_anomaly = bool(score < 0 or risk_score > 0.50)
             
             return {
                 "risk_score": float(risk_score),
@@ -165,3 +140,4 @@ class MLService:
         except Exception as e:
             logger.error(f"Prediction failed: {e}")
             return None
+
