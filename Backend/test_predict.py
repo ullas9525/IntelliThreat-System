@@ -1,7 +1,14 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.abspath(os.path.join(script_dir, '..'))
+model_dir = os.path.abspath(os.path.join(script_dir, '..', 'Model', 'ModelTraining'))
+
+for p in [script_dir, root_dir, model_dir]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
 from services.ml_service import MLService
 from config import Config

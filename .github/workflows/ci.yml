@@ -10,8 +10,6 @@ jobs:
   backend-ci:
     name: Backend ML & API Validation
     runs-on: ubuntu-latest
-    env:
-      PYTHONPATH: "${{ github.workspace }}/Backend:${{ github.workspace }}/Model/ModelTraining"
 
     steps:
       - name: Checkout Code
@@ -58,4 +56,4 @@ jobs:
       - name: Verify Production Vite Build
         run: |
           cd frontend
-          npx vite build
+          npm run build || npx vite build
