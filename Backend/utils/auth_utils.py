@@ -1,3 +1,4 @@
+import os
 import bcrypt
 import jwt
 from datetime import datetime, timedelta
@@ -7,7 +8,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import User
 
-SECRET_KEY = "super-secret-key-change-in-prod"
+SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "super-secret-key-change-in-prod")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24 Hours
 
