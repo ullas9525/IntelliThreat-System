@@ -72,7 +72,50 @@ def predict():
 @jwt_required()
 def get_logs():
     user_id = get_jwt_identity()
-    # In a real app, maybe only Admin sees all logs, users see own.
-    # For demo, returning all logs associated with the current user or 50 recent ones.
-    logs = ActivityLog.query.filter_by(user_id=user_id).order_by(ActivityLog.timestamp.desc()).limit(50).all()
+    user = User.query.get(user_id)
+    if user and user.role in ['IT Admin', 'Admin', 'Senior Analyst', 'Analyst']:
+        logs = ActivityLog.query.order_by(ActivityLog.timestamp.desc()).limit(100).all()
+    else:
+        logs = ActivityLog.query.filter_by(user_id=user_id).order_by(ActivityLog.timestamp.desc()).limit(50).all()
+        if not logs:
+            logs = ActivityLog.query.order_by(ActivityLog.timestamp.desc()).limit(50).all()
     return jsonify([log.to_dict() for log in logs]), 200
+
+@predict_bp.route('/logs/<int:log_id>', methods=['DELETE'])
+@jwt_required()
+def delete_log(log_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    log = ActivityLog.query.get(log_id)
+    
+    if not log:
+        return jsonify({"msg": "Log entry not found"}), 404
+        
+    # Delete associated prediction if exists
+    if log.prediction:
+        db.session.delete(log.prediction)
+        
+    db.session.delete(log)
+    db.session.commit()
+    logger.info(f"Log ID #{log_id} deleted by User #{user_id}")
+    return jsonify({"msg": f"Log #{log_id} deleted successfully"}), 200
+
+@predict_bp.route('/logs', methods=['DELETE'])
+@jwt_required()
+def clear_all_logs():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    
+    if not user or user.role not in ['IT Admin', 'Admin']:
+        return jsonify({"msg": "Admin privileges required to clear telemetry logs"}), 403
+        
+    try:
+        Prediction.query.delete()
+        ActivityLog.query.delete()
+        db.session.commit()
+        logger.info(f"All activity logs and predictions cleared by Admin #{user_id}")
+        return jsonify({"msg": "All activity logs cleared successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to clear logs: {e}")
+        return jsonify({"msg": "Failed to clear logs"}), 500

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -8,18 +7,17 @@ import DashboardLayout from './layouts/DashboardLayout';
 import AuthLayout from './layouts/AuthLayout';
 
 // Pages
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import ThreatSimulator from './pages/ThreatSimulator';
-
+import EmployeePortal from './pages/EmployeePortal';
+import EmployeeManagement from './pages/EmployeeManagement';
 import UserActivity from './pages/UserActivity';
 import Settings from './pages/Settings';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-
-  console.log("PROTECTED ROUTE: Checking access. User:", user, "Loading:", loading);
 
   if (loading) {
     return (
@@ -30,7 +28,6 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!user) {
-    console.warn("PROTECTED ROUTE: No user found. Redirecting to login.");
     return <Navigate to="/login" replace />;
   }
 
@@ -42,15 +39,19 @@ function App() {
     <Router>
       <AuthProvider>
         <Routes>
-          {/* Public Routes */}
+          {/* Step 1: Public Landing Page */}
+          <Route path="/" element={<Landing />} />
+
+          {/* Step 2: Sign In Page */}
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />
           </Route>
 
-          {/* Protected Routes */}
+          {/* Step 3: Protected Portals after Sign In */}
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/simulator" element={<ThreatSimulator />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/portal" element={<EmployeePortal />} />
+            <Route path="/employees" element={<EmployeeManagement />} />
             <Route path="/activity" element={<UserActivity />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/" replace />} />

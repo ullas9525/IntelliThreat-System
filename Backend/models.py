@@ -47,8 +47,11 @@ class ActivityLog(db.Model):
         return {
             'id': self.id,
             'user_id': self.user_id,
+            'username': self.user.username if self.user else f"User #{self.user_id}",
+            'role': self.user.role if self.user else "Employee",
             'timestamp': self.timestamp.isoformat(),
             'action_type': self.action_type,
+            'ip_address': self.ip_address or 'N/A',
             'risk_score': self.prediction.risk_score if self.prediction else None,
             'is_anomaly': self.prediction.is_anomaly if self.prediction else None
         }

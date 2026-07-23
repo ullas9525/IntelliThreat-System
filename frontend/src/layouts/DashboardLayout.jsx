@@ -1,20 +1,29 @@
-
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, ShieldAlert, Activity, Settings, LogOut, Menu } from 'lucide-react';
+import { LayoutDashboard, ShieldAlert, Activity, Settings, Users, LogOut, Menu, UserCheck } from 'lucide-react';
 
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
-  const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+  const isAdmin = user?.role === 'IT Admin' || user?.role === 'Admin';
+
+  const adminNavItems = [
+    { icon: LayoutDashboard, label: 'Admin Dashboard', path: '/dashboard' },
     { icon: Activity, label: 'User Activity', path: '/activity' },
-    { icon: ShieldAlert, label: 'Threat Simulator', path: '/simulator' },
+    { icon: Users, label: 'Employee Management', path: '/employees' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
+
+  const employeeNavItems = [
+    { icon: UserCheck, label: 'Employee Portal', path: '/portal' },
+    { icon: Activity, label: 'My Activity Log', path: '/activity' },
+    { icon: Settings, label: 'Settings', path: '/settings' },
+  ];
+
+  const navItems = isAdmin ? adminNavItems : employeeNavItems;
 
   const handleLogout = () => {
     logout();

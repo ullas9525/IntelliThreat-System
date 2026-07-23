@@ -1,8 +1,6 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { Lock, User, Loader2 } from 'lucide-react';
+import { Lock, User, Loader2, ShieldCheck, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Login = () => {
@@ -11,24 +9,20 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("LOGIN PAGE: Submit clicked");
-    alert("Login pressed! Check console.");
     setError('');
     setLoading(true);
 
     const result = await login(username, password);
-    console.log("LOGIN PAGE: Result:", result);
 
     if (result.success) {
-      console.log("LOGIN PAGE: Success! Forcing reload to /");
-      // Force reload to ensure AuthContext picks up the new token
-      window.location.href = '/';
+      const storedUser = localStorage.getItem('user');
+      const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+      const isAdmin = parsedUser?.role === 'IT Admin' || parsedUser?.role === 'Admin';
+      window.location.href = isAdmin ? '/dashboard' : '/portal';
     } else {
-      console.error("LOGIN PAGE: Failed:", result.message);
       setError(result.message);
     }
     setLoading(false);
@@ -36,7 +30,13 @@ const Login = () => {
 
   return (
     <div className="glass p-8 rounded-2xl border border-gray-700 w-full max-w-sm mx-auto shadow-2xl">
-      <h2 className="text-2xl font-bold mb-6 text-center text-white">Secure Login</h2>
+      <div className="text-center mb-6">
+        <div className="w-12 h-12 bg-accent-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3 text-accent-primary">
+          <ShieldCheck className="w-7 h-7" />
+        </div>
+        <h2 className="text-2xl font-bold text-white">Employee Sign In</h2>
+        <p className="text-xs text-gray-400 mt-1">Access IntelliThreat Security Console</p>
+      </div>
 
       {error && (
         <motion.div
@@ -84,15 +84,15 @@ const Login = () => {
           disabled={loading}
           className="w-full bg-accent-primary hover:bg-blue-600 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6"
         >
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Access Console'}
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
         </button>
       </form>
 
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-500">
-          For demo access use: <br />
-          <span className="text-gray-300 font-mono">analyst_01 / securePassword123</span>
-        </p>
+      <div className="mt-6 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30 text-xs text-blue-300 flex items-start space-x-2">
+        <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+        <span>
+          Employee accounts are created by IT Admin. Please contact your administrator for login credentials.
+        </span>
       </div>
     </div>
   );

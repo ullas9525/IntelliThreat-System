@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import api from '../services/api';
 
@@ -9,25 +8,19 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored token on load
+    // Check for stored token & user on load
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
-
-    console.log("AUTH INIT: Token from storage:", token);
-    console.log("AUTH INIT: User from storage:", storedUser);
 
     if (token && storedUser && storedUser !== "undefined") {
       try {
         const parsedUser = JSON.parse(storedUser);
-        console.log("AUTH INIT: Parsed user:", parsedUser);
         setUser(parsedUser);
       } catch (e) {
-        console.error("AUTH INIT: Failed to parse user JSON", e);
+        console.error("AUTH INIT: Failed to parse stored user", e);
         localStorage.removeItem('user');
         localStorage.removeItem('token');
       }
-    } else {
-      console.log("AUTH INIT: No valid session found.");
     }
     setLoading(false);
   }, []);
@@ -35,12 +28,10 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const response = await api.post('/auth/login', { username, password });
-      console.log("AUTH CONTEXT: API Response:", response.data);
       const { access_token, user } = response.data;
 
       localStorage.setItem('token', access_token);
       localStorage.setItem('user', JSON.stringify(user));
-      console.log("AUTH CONTEXT: Setting user state:", user);
       setUser(user);
       return { success: true };
     } catch (error) {

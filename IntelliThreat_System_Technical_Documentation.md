@@ -267,35 +267,36 @@ Average Score = Sum(Model_i_decision_function) / 4
 
 ## 6. Functionality Breakdown
 
-### 1. Authentication & User Management Module
-- **Registration (`/api/auth/register`):** Validates email format, username uniqueness, hashes user password with `flask_bcrypt`, and assigns initial role (`Analyst`, `IT Admin`, `HR`).
-- **Login (`/api/auth/login`):** Verifies username and bcrypt hash match. Generates signed JWT access token (`JWT_ACCESS_TOKEN_EXPIRES = 1 Hour`).
-- **Client Auth State (`AuthContext.jsx`):** Persists user credentials and token in `localStorage`, maintaining authenticated session on page refresh.
+### 1. 3-Tier Navigation Flow & Role Provisioning (`Landing.jsx`, `Login.jsx`, `EmployeeManagement.jsx`)
+- **Step 1: Public Landing Page (`/`):** High-impact product showcase detailing AI Isolation Forest capabilities, zero-day threat features, pipeline architecture, and Sign In CTAs.
+- **Step 2: Employee Sign In (`/login`):** Public Sign In ONLY. Displays notice stating accounts are created by IT Admin. Authenticated users are automatically routed to their role-specific portal.
+- **Step 3: Role-Specific Portals (`/dashboard`, `/portal`):** Routes `IT Admin` to the Admin Security Console and `Employee` / `Analyst` / `Vendor` to the Employee Portal.
+- **Admin Employee Provisioning & Deletion (`/employees`):** IT Admins create employee credentials and can remove employee accounts (`DELETE /api/auth/users/<user_id>`) directly from the UI.
 
-### 2. Admin & Analyst Dashboard (`Dashboard.jsx`)
-- Displays real-time threat summary metrics:
-  - **Total Logs Analyzed**
-  - **High Risk Anomalies Flagged**
-  - **Average System Risk Score**
-  - **Active Monitored Users**
-- Visualizes risk score distribution histograms and temporal threat trends using `Recharts`.
-- Highlights high-risk users requiring immediate incident investigation.
+### 2. Admin Security Console (`Dashboard.jsx`)
+- Displays organization-wide threat summary metrics:
+  - **Total System Incidents**
+  - **High Risk Insider Threats Flagged**
+  - **Average Organization Risk Score**
+  - **Active Monitored Accounts**
+- Visualizes real-time risk score trends and incident distribution via `Recharts`.
+- Displays real-time attack alert feeds with employee username, action type, IP address, and anomaly score.
+- **Note:** Threat Simulator is excluded from Admin view to preserve monitoring purity.
 
-### 3. Interactive Threat Simulator (`ThreatSimulator.jsx`)
-- Provides an interactive control panel for security analysts to test and demonstrate ML model responses under varied attack scenarios:
-  - **Normal Employee Session:** Low download volume, standard working hours, 0 failed logins.
-  - **Mass Data Exfiltration:** Session with 5000+ MB downloads in a short session.
-  - **Credential Abuse / Brute Force:** High failed logins count combined with off-hours access.
-  - **Vendor Off-Hours Probe:** Off-hours access with spike in resource access count.
-- Submits telemetry directly to `/api/predict` and displays real-time risk score gauge, anomaly alerts, and feature contribution breakdown.
+### 3. Employee Portal & Threat Simulation Lab (`EmployeePortal.jsx`, `ThreatSimulator.jsx`)
+- Dedicated workspace for employees and analysts.
+- Features the **Threat Simulation Lab** allowing employees to test and report session scenarios (Data Exfiltration, Brute Force, Vendor Probes).
+- Submits telemetry directly to `/api/predict`. High-risk sessions trigger immediate AI alerts that surface on the Admin Security Console.
 
-### 4. Telemetry Activity Log (`UserActivity.jsx`)
-- Tabular record of all system activity logs stored in database.
-- Provides search, role filtering, and risk score sorting.
-- Indicates alert status (`NORMAL` green badge vs `HIGH RISK` red badge).
+### 4. Telemetry Activity Log & Username Attribution (`UserActivity.jsx`, `Dashboard.jsx`)
+- **Direct Employee Username Attribution:** Serializes employee `username` and `role` directly in telemetry JSON output (`ActivityLog.to_dict()`) instead of numeric database IDs.
+- **Organization & Personal Telemetry Logs:** Activity log view supporting search by username, action, or IP, role filtering, risk score sorting, and alert status badges (`NORMAL` vs `HIGH RISK`).
+- **Individual Log Deletion (`DELETE /api/logs/<log_id>`):** Admins can delete specific log entries and linked prediction records via trash icon 🗑️.
+- **Bulk Telemetry Purge (`DELETE /api/logs`):** Admins can clear all activity logs from the database for a clean slate.
+- **Live Telemetry Refresh (`Dashboard.jsx`):** Features "Refresh Data" 🔄 button to reload live incident counts and risk monitor graphs dynamically.
 
 ### 5. Settings & Config Module (`Settings.jsx`)
-- Allows admins to tune risk thresholds, manage alert notification preferences, and inspect loaded ML model artifact metadata.
+- Allows tuning of risk thresholds, notification preferences, and inspection of loaded ML model artifact metadata.
 
 ---
 
