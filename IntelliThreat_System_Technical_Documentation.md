@@ -2,8 +2,7 @@
 
 > **System Name:** IntelliThreat System  
 > **Repository:** `IntelliThreat-System`  
-> **Domain:** FinTech Insider & Vendor Threat Analytics  
-> **Architecture:** 3-Tier Web Application (React SPA + Flask REST API + Unsupervised Ensemble ML Pipeline + SQL Engine)  
+> **Domain:** FinTech Insider & Vendor Threat Analytics > **Architecture:** 3-Tier Web Application (React SPA + FastAPI ASGI REST API + Unsupervised Ensemble ML Pipeline + SQL Engine)  
 > **Date:** July 2026  
 
 ---
@@ -30,12 +29,12 @@
                                            JWT Auth Header
                                                       v
                                   +---------------------------------------+
-                                  |          Flask REST API Gateway       |
-                                  |      (app.py / routes / auth / JWT)   |
+                                  |         FastAPI ASGI REST API Gateway |
+                                  |    (main.py / routers / OpenAPI Docs) |
                                   +-------------------+-------------------+
                                                       |
-                                      +---------------+---------------+
-                                      v                               v
+                                       +---------------+---------------+
+                                       v                               v
                      +---------------------------------+  +---------------------------------+
                      |   ML Inference Engine           |  |    SQL Database Engine          |
                      | - Feature Engineering Pipeline  |  | - SQLite / PyMySQL (SQLAlchemy) |
@@ -53,17 +52,19 @@
 | :--- | :--- | :--- | :--- |
 | **Programming Language** | Python | `3.10+` | Backend API, Feature Engineering, Machine Learning Pipeline |
 | **Programming Language** | JavaScript (Node.js) | `ES6+ / Node 18+` | React Frontend Client Application |
-| **Web Backend Framework** | Flask | `3.0+` | RESTful API Routing, Controllers, Services |
+| **Web Backend Framework** | FastAPI | `0.100+` | Asynchronous High-Performance REST API Routing, Controllers, Services |
+| **ASGI Server** | Uvicorn | `0.22+` | Asynchronous Server Gateway Interface for high-concurrency request handling |
 | **Frontend Framework** | React | `19.2.0` | Component-driven Single Page Application (SPA) UI |
 | **Frontend Build Tool** | Vite / Rolldown | `7.2.5` | Next-generation fast bundler & hot module replacement |
 | **Database** | SQLite / MySQL | SQLite3 / MySQL 8.0 | Relational storage for users, telemetry logs, & risk outputs |
-| **ORM** | Flask-SQLAlchemy | `3.1+` | Object-Relational Mapping for database entity models |
+| **ORM** | SQLAlchemy | `2.0+` | Declarative Object-Relational Mapping for database entity models |
+| **Data Validation** | Pydantic | `2.0+` | Strict type validation for REST requests and response schemas |
 | **Machine Learning** | Scikit-learn | `1.3+` | Unsupervised Ensemble algorithms (`IsolationForest`, `MinMaxScaler`) |
 | **Data Manipulation** | Pandas & NumPy | Pandas `2.0+`, NumPy `1.24+` | Vectorized data cleaning, feature creation, & transformations |
 | **Serialization** | Joblib | `1.3+` | Model artifact persisting and loading (`.pkl`) |
 | **CI/CD Automation** | GitHub Actions | `YAML Workflows` | Continuous Integration / Delivery pipeline for ML & React SPA |
 | **Styling** | Tailwind CSS | `v4.1.18` | Responsive utility-first design system with custom dark theme |
-| **Version Control** | Git | Git 2.x | Source code management |
+| **Version Control** | Git | Git 2.x | Source code management |ment |
 
 ---
 
@@ -103,12 +104,12 @@
 
 ## 4. Frameworks & Libraries Justification
 
-### 1. Flask (Backend API Framework)
-- **Why Chosen:** Flask is a lightweight micro-framework that provides total control over architecture without enforcing rigid boilerplate.
-- **Exact Benefit Gained:** Fast startup time, minimal overhead, and seamless native integration with Python ML tools (`scikit-learn`, `pandas`, `joblib`) in the same execution context.
+### 1. FastAPI (Asynchronous Backend REST Framework)
+- **Why Chosen:** FastAPI is a modern, high-performance Python framework built on Starlette and Pydantic that natively supports asynchronous ASGI execution.
+- **Exact Benefit Gained:** Provides high-concurrency request processing via Uvicorn, automatic OpenAPI interactive Swagger documentation (`/docs`), strict request/response data validation via Pydantic, and fast startup performance.
 - **Why Alternatives Were NOT Used:**
-  - *Django:* Too heavy for a microservice architecture; includes unnecessary built-in template engines and admin sites that duplicate React's role.
-  - *FastAPI:* Excellent for async, but Flask's WSGI model aligns simpler with synchronous scikit-learn model evaluation and Flask-SQLAlchemy transaction boundaries.
+  - *Flask:* Synchronous WSGI model incurs higher thread-blocking latency under high telemetry ingestion rates and lacks native interactive Swagger documentation and automatic Pydantic request validation.
+  - *Django:* Overly complex monolithic framework with unnecessary template rendering engines that duplicate React's single-page architecture.
 
 ### 2. Unsupervised Ensemble Isolation Forest (AI Model Architecture)
 - **Why Chosen:** Insider threat telemetry lacks labeled positive training examples ("attacks"). Standard supervised algorithms (Random Forest, XGBoost) cannot be trained without historical attack labels.
@@ -329,15 +330,19 @@ Average Score = Sum(Model_i_decision_function) / 4
    pip install -r requirements.txt
    ```
 
-4. Initialize administrative seed user (Optional):
+4. Initialize administrative seed user:
    ```bash
-   python create_admin.py
+   python seed_fastapi_admin.py
    ```
 
-5. Launch the Flask Backend API server:
+5. Launch the FastAPI ASGI Backend server:
    ```bash
-   python app.py
+   python main.py
+   # Or using Uvicorn directly:
+   uvicorn main:app --port 5000 --reload
    ```
+   - **Interactive OpenAPI Swagger Docs:** `http://localhost:5000/docs`
+   - **ReDoc API Specification:** `http://localhost:5000/redoc`
    *The Flask server starts running at `http://localhost:5000`.*
 
 ---
