@@ -60,7 +60,8 @@
 | **ORM** | Flask-SQLAlchemy | `3.1+` | Object-Relational Mapping for database entity models |
 | **Machine Learning** | Scikit-learn | `1.3+` | Unsupervised Ensemble algorithms (`IsolationForest`, `MinMaxScaler`) |
 | **Data Manipulation** | Pandas & NumPy | Pandas `2.0+`, NumPy `1.24+` | Vectorized data cleaning, feature creation, & transformations |
-| **Serialization** | Joblib | `1.3+` | Model model artifact persisting and loading (`.pkl`) |
+| **Serialization** | Joblib | `1.3+` | Model artifact persisting and loading (`.pkl`) |
+| **CI/CD Automation** | GitHub Actions | `YAML Workflows` | Continuous Integration / Delivery pipeline for ML & React SPA |
 | **Styling** | Tailwind CSS | `v4.1.18` | Responsive utility-first design system with custom dark theme |
 | **Version Control** | Git | Git 2.x | Source code management |
 
@@ -367,6 +368,17 @@ Average Score = Sum(Model_i_decision_function) / 4
    - **Username:** `admin`
    - **Password:** `admin123`
 3. Navigate to **Threat Simulator** to test real-time risk evaluation or **Dashboard** to view system telemetry stats.
+
+---
+
+### Step 4: Automated CI/CD Pipeline Execution
+
+The system includes a production GitHub Actions CI/CD workflow (`.github/workflows/ci.yml`):
+
+1. **Triggering Pipeline:** Push code changes to GitHub (`main`, `master`, or `dev` branch) or create a Pull Request.
+2. **Automated Verification:**
+   - **Backend Job:** Installs Python 3.10, checks ML artifact integrity, runs `test_predict.py`, launches headless Flask API server, and runs E2E test suite `test_backend.py`.
+   - **Frontend Job:** Installs Node.js 18 packages and runs production bundle compilation (`npm run build`).
 
 ---
 

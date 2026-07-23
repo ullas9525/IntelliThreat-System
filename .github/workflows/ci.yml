@@ -1,0 +1,73 @@
+name: IntelliThreat System CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, dev ]
+  pull_request:
+    branches: [ main, master, dev ]
+
+jobs:
+  backend-ci:
+    name: Backend ML & API Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install Backend Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          cd Backend
+          pip install -r requirements.txt
+
+      - name: Verify ML Artifacts Existence
+        run: |
+          python -c "import os; assert os.path.exists('Model/ModelTraining/optimized_ensemble_model.pkl'), 'Model file missing!'"
+          python -c "import os; assert os.path.exists('Model/FeatureEngineering/scaler.pkl'), 'Scaler file missing!'"
+          python -c "import os; assert os.path.exists('Model/FeatureEngineering/role_encoder.pkl'), 'Role encoder missing!'"
+
+      - name: Run ML Inference Unit Tests
+        run: |
+          python Backend/test_predict.py
+
+      - name: Start Flask API Server (Headless Background)
+        run: |
+          cd Backend
+          python app.py &
+          sleep 5
+
+      - name: Run E2E Integration Test Suite
+        run: |
+          python Backend/test_backend.py
+
+  frontend-ci:
+    name: Frontend React & Vite Build Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci || npm install
+
+      - name: Verify Production Vite Build
+        run: |
+          cd frontend
+          npm run build
