@@ -23,9 +23,9 @@ venv/
 # *.json
 
 
-# Machine Learning Artifacts (Can be regenerated via pipeline)
-*.pkl
-*.joblib
+# Machine Learning Artifacts (Tracked for CI/CD model verification)
+!Model/ModelTraining/*.pkl
+!Model/FeatureEngineering/*.pkl
 Model/ModelTraining/anomaly_score_distribution.png
 
 # Logs
