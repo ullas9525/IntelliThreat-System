@@ -16,7 +16,7 @@ The system analyzes continuous user activity telemetry—such as off-hours acces
 ## 🎯 Key Features
 
 - ✅ **FastAPI Asynchronous Engine:** High-concurrency ASGI backend running on Uvicorn with Pydantic request validation.
-- ✅ **Interactive OpenAPI Swagger Docs:** Auto-generated interactive API test suite live at `http://localhost:5000/docs`.
+- ✅ **Interactive OpenAPI Swagger Docs:** Auto-generated interactive API testing suite and OpenAPI specification at `/docs`.
 - ✅ **Unsupervised Anomaly Detection:** 2-pass Isolation Forest Ensemble (`UnsupervisedEnsemble`) for zero-day threat detection.
 - ✅ **3-Tier Role-Based Navigation:**
   - 🌐 **Public Landing Page (`/`):** Showcase product features, zero-day detection models, and system architecture.
@@ -71,10 +71,9 @@ python seed_fastapi_admin.py
 python main.py
 # Or using Uvicorn directly:
 uvicorn main:app --port 5000 --reload
-```
-- **Backend API Base URL:** `http://localhost:5000`
-- **Interactive Swagger Docs:** `http://localhost:5000/docs`
-- **ReDoc API Specification:** `http://localhost:5000/redoc`
+- **Backend API Server:** Port `5000` (`http://127.0.0.1:5000`)
+- **Interactive Swagger Docs:** `/docs`
+- **ReDoc API Specification:** `/redoc`
 
 ### 3. Frontend Setup (React + Vite)
 ```bash
@@ -87,18 +86,18 @@ npm install --legacy-peer-deps
 # Launch Vite development server
 npm run dev
 ```
-- **Frontend Web App URL:** `http://localhost:5173`
+- **Frontend Web App Server:** Port `5173` (`http://127.0.0.1:5173`)
 
 ---
 
-## 🔐 Default Credentials
+## 🔐 System Access & Credentials
 
-| Username | Password | Role | Redirect Portal |
-| :--- | :--- | :--- | :--- |
-| `admin` | `admin123` | IT Admin | Admin Security Console (`/dashboard`) |
-| `analyst_01` | `securePassword123` | Analyst | Employee Portal & Simulator (`/portal`) |
+| Username | Password | Role | Privileges | Target Console |
+| :--- | :--- | :--- | :--- | :--- |
+| `admin` | `admin123` | IT Admin | Full Administrative Access | Admin Security Console (`/dashboard`) |
 
-*Note: IT Admins can provision new employee accounts via the Employee Management page (`/employees`).*
+> ℹ️ **Employee Account Provisioning:**  
+> Public self-registration is disabled for enterprise security compliance. **IT Admins create employee login credentials** (Username, Email, Password, Role) directly via the **Employee Account Provisioning** console (`/employees`). Employees sign in at `/login` with their provisioned credentials and are automatically routed to the **Employee Portal & Simulator** (`/portal`).
 
 ---
 
@@ -113,7 +112,7 @@ The system evaluates continuous session metrics:
 - `failed_logins` (authentication failures)
 
 ### Score Formula:
-$$\text{Risk Score} = \min\left(1.0, \max\left(0.0, \frac{\text{raw\_score} - \text{threshold}}{\text{max\_decision\_offset}}\right)\right)$$
+$$\text{Risk Score} = \min\left(1.0, \max\left(0.0, \frac{\text{Raw Score} - \text{Threshold}}{\text{Max Decision Offset}}\right)\right)$$
 Sessions with a scaled risk score $\ge 70\%$ trigger instant **HIGH RISK INSIDER THREAT** alerts.
 
 ---
